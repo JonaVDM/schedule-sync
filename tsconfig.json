@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "sourceMap": false,
+    "outDir": "dist",
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "target": "es5",
+    "esModuleInterop": true,
+    "removeComments": true
+  },
+  "include": ["./server/"]
+}
