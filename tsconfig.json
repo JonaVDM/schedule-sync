@@ -4,6 +4,7 @@
     "noImplicitAny": true,
     "sourceMap": false,
     "outDir": "dist",
+    "baseUrl": "./",
     "paths": {
       "*": ["node_modules/*"]
     },
@@ -11,5 +12,5 @@
     "esModuleInterop": true,
     "removeComments": true
   },
-  "include": ["./server/"]
+  "include": ["./src/"]
 }
