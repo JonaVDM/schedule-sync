@@ -3,21 +3,31 @@ import Google from './api/google';
 
 import dotenv from 'dotenv';
 import Shift from './types/shift';
+import { exit } from 'process';
+
+
+const google = new Google();
+const scoober = new Scoober();
 
 (async () => {
     dotenv.config();
 
+    const { email, password } = process.env;
+    await google.login();
+
+    try {
+        await scoober.login(email, password);
+    } catch (e) {
+        console.log(e);
+        exit(1);
+    }
+
     const dates = getDates();
 
-    // const shifts = await getShifts(dates);
-})();
+    const events = await google.getEvents('Thuisbezorgd', dates);
+    const shifts = await scoober.shifts(...dates);
 
-async function getShifts(dates: [Date, Date]): Promise<Shift[]> {
-    const { email, password } = process.env;
-    const access = new Scoober();
-    await access.login(email, password);
-    return await access.shifts(...dates);
-}
+})();
 
 function getDates(): [Date, Date] {
     const day = 1000 * 60 * 60 * 24;
@@ -34,3 +44,4 @@ function getDates(): [Date, Date] {
 
     return [monday, sunday];
 }
+

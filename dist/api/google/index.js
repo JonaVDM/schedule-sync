@@ -39,55 +39,64 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var scoober_1 = __importDefault(require("./api/scoober"));
-var google_1 = __importDefault(require("./api/google"));
-var dotenv_1 = __importDefault(require("dotenv"));
-var google = new google_1.default();
-var scoober = new scoober_1.default();
-(function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, email, password, dates, events;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _a = process.env, email = _a.email, password = _a.password;
-                return [4, google.login()];
-            case 1:
-                _b.sent();
-                return [4, scoober.login(email, password)];
-            case 2:
-                _b.sent();
-                dotenv_1.default.config();
-                dates = getDates();
-                return [4, getCalendarItems(dates)];
-            case 3:
-                events = _b.sent();
-                console.log(events);
-                return [2];
-        }
-    });
-}); })();
-function getShifts(dates) {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4, scoober.shifts.apply(scoober, dates)];
-                case 1: return [2, _a.sent()];
-            }
+var login_1 = __importDefault(require("./login"));
+var googleapis_1 = require("googleapis");
+var Google = (function () {
+    function Google() {
+    }
+    Google.prototype.login = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var client;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, login_1.default()];
+                    case 1:
+                        client = _a.sent();
+                        this.client = client;
+                        return [2];
+                }
+            });
         });
-    });
-}
-function getDates() {
-    var day = 1000 * 60 * 60 * 24;
-    var today = new Date();
-    var dayOfWeek = today.getDay();
-    if (dayOfWeek == 0)
-        dayOfWeek = 7;
-    var toMonday = (dayOfWeek - 1) * day;
-    var toSunday = ((7 - dayOfWeek) + 7) * day;
-    var monday = new Date(today.getTime() - toMonday);
-    var sunday = new Date(today.getTime() + toSunday);
-    return [monday, sunday];
-}
-function getCalendarItems(dates) {
-    return google.getEvents('Thuisbezorgd', dates);
-}
+    };
+    Google.prototype.sendEmail = function () {
+        return;
+    };
+    Google.prototype.addEvent = function () {
+        return;
+    };
+    Google.prototype.getEvents = function (name, dates) {
+        return __awaiter(this, void 0, void 0, function () {
+            var calendar, calendars, calendarId, _i, _a, c, events;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        calendar = googleapis_1.google.calendar({ version: 'v3', auth: this.client });
+                        return [4, calendar.calendarList.list()];
+                    case 1:
+                        calendars = _b.sent();
+                        for (_i = 0, _a = calendars.data.items; _i < _a.length; _i++) {
+                            c = _a[_i];
+                            if (c.summary == name) {
+                                calendarId = c.id;
+                            }
+                        }
+                        if (!calendarId)
+                            throw new Error('Could not find Calendar');
+                        return [4, calendar.events.list({
+                                calendarId: calendarId,
+                                timeMin: dates[0].toISOString(),
+                                timeMax: dates[1].toISOString(),
+                            })];
+                    case 2:
+                        events = _b.sent();
+                        return [2, events.data.items];
+                }
+            });
+        });
+    };
+    Google.prototype.editEvent = function () {
+        return;
+    };
+    return Google;
+}());
+exports.default = Google;

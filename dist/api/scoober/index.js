@@ -39,55 +39,56 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var scoober_1 = __importDefault(require("./api/scoober"));
-var google_1 = __importDefault(require("./api/google"));
-var dotenv_1 = __importDefault(require("dotenv"));
-var google = new google_1.default();
-var scoober = new scoober_1.default();
-(function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, email, password, dates, events;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _a = process.env, email = _a.email, password = _a.password;
-                return [4, google.login()];
-            case 1:
-                _b.sent();
-                return [4, scoober.login(email, password)];
-            case 2:
-                _b.sent();
-                dotenv_1.default.config();
-                dates = getDates();
-                return [4, getCalendarItems(dates)];
-            case 3:
-                events = _b.sent();
-                console.log(events);
-                return [2];
-        }
-    });
-}); })();
-function getShifts(dates) {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4, scoober.shifts.apply(scoober, dates)];
-                case 1: return [2, _a.sent()];
-            }
+var axios_1 = __importDefault(require("axios"));
+var calls_1 = __importDefault(require("./calls"));
+var Scoober = (function () {
+    function Scoober() {
+    }
+    Scoober.prototype.login = function (email, password) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, data;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, axios_1.default.post(calls_1.default.login, { userName: email, password: password })];
+                    case 1:
+                        response = _a.sent();
+                        data = response.data;
+                        this.token = data.accessToken;
+                        return [2, this.token];
+                }
+            });
         });
-    });
-}
-function getDates() {
-    var day = 1000 * 60 * 60 * 24;
-    var today = new Date();
-    var dayOfWeek = today.getDay();
-    if (dayOfWeek == 0)
-        dayOfWeek = 7;
-    var toMonday = (dayOfWeek - 1) * day;
-    var toSunday = ((7 - dayOfWeek) + 7) * day;
-    var monday = new Date(today.getTime() - toMonday);
-    var sunday = new Date(today.getTime() + toSunday);
-    return [monday, sunday];
-}
-function getCalendarItems(dates) {
-    return google.getEvents('Thuisbezorgd', dates);
-}
+    };
+    Scoober.prototype.shifts = function (start, finish) {
+        return __awaiter(this, void 0, void 0, function () {
+            var fromDate, toDate, data;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!this.token) {
+                            throw new Error("User not signed in");
+                        }
+                        fromDate = this.formatDate(start);
+                        toDate = this.formatDate(finish);
+                        return [4, axios_1.default.get(calls_1.default.planning, {
+                                headers: {
+                                    accessToken: this.token,
+                                },
+                                params: {
+                                    fromDate: fromDate,
+                                    toDate: toDate
+                                }
+                            })];
+                    case 1:
+                        data = (_a.sent()).data;
+                        return [2, data];
+                }
+            });
+        });
+    };
+    Scoober.prototype.formatDate = function (date) {
+        return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+    };
+    return Scoober;
+}());
+exports.default = Scoober;
