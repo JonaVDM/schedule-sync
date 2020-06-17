@@ -1,10 +1,10 @@
 import axios from 'axios';
 import calls from './calls';
 
-import UserData from '../types/user-data';
-import Shift from '../types/shift';
+import UserData from '../../types/user-data';
+import Shift from '../../types/shift';
 
-export default class API {
+export default class Scoober {
     public token: string;
 
     public async login(email: string, password: string): Promise<string> {

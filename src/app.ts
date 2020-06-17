@@ -1,4 +1,6 @@
-import API from './api';
+import Scoober from './api/scoober';
+import Google from './api/google';
+
 import dotenv from 'dotenv';
 import Shift from './types/shift';
 
@@ -12,7 +14,7 @@ import Shift from './types/shift';
 
 async function getShifts(dates: [Date, Date]): Promise<Shift[]> {
     const { email, password } = process.env;
-    const access = new API();
+    const access = new Scoober();
     await access.login(email, password);
     return await access.shifts(...dates);
 }
