@@ -1,14 +1,34 @@
 import API from './api';
 import dotenv from 'dotenv';
+import Shift from './types/shift';
 
 (async () => {
     dotenv.config();
 
-    const { email, password } = process.env;
+    const dates = getDates();
 
-    const access = new API();
-
-    await access.login(email, password);
-
-    await access.shifts(new Date('2020-01-01'), new Date('2020-06-21'));
+    // const shifts = await getShifts(dates);
 })();
+
+async function getShifts(dates: [Date, Date]): Promise<Shift[]> {
+    const { email, password } = process.env;
+    const access = new API();
+    await access.login(email, password);
+    return await access.shifts(...dates);
+}
+
+function getDates(): [Date, Date] {
+    const day = 1000 * 60 * 60 * 24;
+    const today = new Date();
+
+    let dayOfWeek = today.getDay();
+    if (dayOfWeek == 0) dayOfWeek = 7;
+
+    const toMonday = (dayOfWeek - 1) * day;
+    const toSunday = ((7 - dayOfWeek) + 7) * day;
+
+    const monday = new Date(today.getTime() - toMonday);
+    const sunday = new Date(today.getTime() + toSunday);
+
+    return [monday, sunday];
+}

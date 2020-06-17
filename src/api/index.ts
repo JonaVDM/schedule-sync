@@ -3,8 +3,6 @@ import calls from './calls';
 
 import UserData from '../types/user-data';
 import Shift from '../types/shift';
-import { start } from 'repl';
-import { format } from 'path';
 
 export default class API {
     public token: string;
@@ -41,6 +39,5 @@ export default class API {
 
     private formatDate(date: Date): string {
         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-
     }
 }
