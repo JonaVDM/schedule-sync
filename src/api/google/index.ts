@@ -65,14 +65,30 @@ export default class Google {
         return events.data.items;
     }
 
-    public editEvent() {
-        return;
+    public async editEvent(id: string, start: string, end: string, title: string, description: string) {
+        const calendar = google.calendar({ version: 'v3', auth: this.client });
+        if (!this.calendar) throw 'Calendar not defined';
+
+        await calendar.events.update({
+            calendarId: this.calendar,
+            eventId: id,
+            requestBody: {
+                start: {
+                    dateTime: start,
+                },
+                end: {
+                    dateTime: end,
+                },
+                description,
+                summary: title,
+            }
+        });
     }
 
     public async deleteEvent(id: string) {
         const calendar = google.calendar({ version: 'v3', auth: this.client });
         if (!this.calendar) throw 'Calendar not defined';
 
-        await calendar.events.delete({calendarId: this.calendar, eventId: id});
+        await calendar.events.delete({ calendarId: this.calendar, eventId: id });
     }
 }

@@ -3,7 +3,7 @@ import Google from './api/google';
 
 import dotenv from 'dotenv';
 
-import { exit, env } from 'process';
+import { exit } from 'process';
 
 import Shift from './types/shift';
 
@@ -67,7 +67,25 @@ const scoober = new Scoober();
         }
 
         // Update shift
+        shiftIdC.forEach((value, key) => {
+            for (const shift of shifts) {
+                if (shift._id == key) {
+                    for (const event of events) {
+                        if (event.id == value) {
+                            const start = new Date(event.start.dateTime);
+                            const from = new Date(shift.fromWithTimeZone);
 
+                            const end = new Date(event.end.dateTime);
+                            const to = new Date(shift.toWithTimeZone);
+
+                            if (start.getTime() != from.getTime() || end.getTime() != to.getTime()) {
+                                google.editEvent(value, shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', JSON.stringify(shift));
+                            }
+                        }
+                    }
+                }
+            }
+        });
     } catch (e) {
         console.log(e);
         exit(1);
