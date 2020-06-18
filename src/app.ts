@@ -18,21 +18,11 @@ const scoober = new Scoober();
 
     try {
         await google.login();
-    } catch (e) {
-        console.log(e);
-        exit(1);
-    }
 
-    try {
         await scoober.login(email, password);
-    } catch (e) {
-        console.log(e);
-        exit(1);
-    }
 
-    const dates = getDates();
+        const dates = getDates();
 
-    try {
         await google.getCalendarId('Thuisbezorgd');
         const events = await google.getEvents(dates);
         const shifts = await scoober.shifts(...dates);
