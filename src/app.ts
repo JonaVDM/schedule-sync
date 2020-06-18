@@ -2,8 +2,10 @@ import Scoober from './api/scoober';
 import Google from './api/google';
 
 import dotenv from 'dotenv';
+
+import { exit, env } from 'process';
+
 import Shift from './types/shift';
-import { exit } from 'process';
 
 
 const google = new Google();
@@ -13,7 +15,13 @@ const scoober = new Scoober();
     dotenv.config();
 
     const { email, password } = process.env;
-    await google.login();
+
+    try {
+        await google.login();
+    } catch (e) {
+        console.log(e);
+        exit(1);
+    }
 
     try {
         await scoober.login(email, password);
@@ -24,9 +32,46 @@ const scoober = new Scoober();
 
     const dates = getDates();
 
-    const events = await google.getEvents('Thuisbezorgd', dates);
-    const shifts = await scoober.shifts(...dates);
+    try {
+        await google.getCalendarId('Thuisbezorgd');
+        const events = await google.getEvents(dates);
+        const shifts = await scoober.shifts(...dates);
 
+        const shiftIdC: Map<string, string> = new Map();
+        const shiftIdS: string[] = [];
+
+        // get the ids from scoober
+        for (const shift of shifts) {
+            shiftIdS.push(shift._id);
+        }
+
+        // get the ids from google
+        for (const event of events) {
+            if (!event.description) continue;
+            const description: Shift = JSON.parse(event.description);
+            shiftIdC.set(description._id, event.id);
+        }
+
+        // remove event if shift does not exist
+        shiftIdC.forEach((value, key) => {
+            if (!shiftIdS.includes(key)) {
+                google.deleteEvent(value);
+                shiftIdC.delete(key);
+            }
+        });
+
+        // add shift
+        for (const shift of shifts) {
+            if (shiftIdC.get(shift._id)) continue;
+            google.addEvent(shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', JSON.stringify(shift));
+        }
+
+        // Update shift
+
+    } catch (e) {
+        console.log(e);
+        exit(1);
+    }
 })();
 
 function getDates(): [Date, Date] {

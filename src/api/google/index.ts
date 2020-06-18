@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 
 export default class Google {
     private client: any;
+    private calendar = '';
 
     public async login() {
         const client = await login();
@@ -13,26 +14,50 @@ export default class Google {
         return;
     }
 
-    public addEvent() {
-        return;
+    public async useCalandar(id: string) {
+        this.calendar = id;
     }
 
-    public async getEvents(name: string, dates: [Date, Date]) {
+    public async getCalendarId(name: string): Promise<string> {
         const calendar = google.calendar({ version: 'v3', auth: this.client });
         const calendars = await calendar.calendarList.list();
 
-        let calendarId: string;
-
         for (const c of calendars.data.items) {
             if (c.summary == name) {
-                calendarId = c.id;
+                this.useCalandar(c.id);
+                return c.id;
             }
         }
 
-        if (!calendarId) throw new Error('Could not find Calendar');
+        throw 'Calendar not found';
+    }
+
+    public async addEvent(start: string, end: string, title: string, description: string) {
+        const cal = google.calendar({ version: 'v3', auth: this.client });
+        if (!this.calendar) throw 'Calendar not defined';
+
+        await cal.events.insert({
+            calendarId: this.calendar,
+            requestBody: {
+                start: {
+                    dateTime: start,
+                },
+                end: {
+                    dateTime: end
+                },
+                description,
+                summary: title,
+            }
+        });
+        return;
+    }
+
+    public async getEvents(dates: [Date, Date]) {
+        const calendar = google.calendar({ version: 'v3', auth: this.client });
+        if (!this.calendar) throw 'Calendar not defined';
 
         const events = await calendar.events.list({
-            calendarId,
+            calendarId: this.calendar,
             timeMin: dates[0].toISOString(),
             timeMax: dates[1].toISOString(),
         });
@@ -42,5 +67,12 @@ export default class Google {
 
     public editEvent() {
         return;
+    }
+
+    public async deleteEvent(id: string) {
+        const calendar = google.calendar({ version: 'v3', auth: this.client });
+        if (!this.calendar) throw 'Calendar not defined';
+
+        await calendar.events.delete({calendarId: this.calendar, eventId: id});
     }
 }
