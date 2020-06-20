@@ -11,7 +11,10 @@ import Shift from './types/shift';
 const google = new Google();
 const scoober = new Scoober();
 
-(async () => {
+setInterval(main, 15 * 60 * 1000);
+main();
+
+async function main() {
     dotenv.config();
 
     const { email, password } = process.env;
@@ -80,7 +83,7 @@ const scoober = new Scoober();
         console.log(e);
         exit(1);
     }
-})();
+}
 
 function getDates(): [Date, Date] {
     const day = 1000 * 60 * 60 * 24;
