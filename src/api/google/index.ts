@@ -10,8 +10,21 @@ export default class Google {
         this.client = client;
     }
 
-    public sendEmail() {
-        return;
+    public async sendEmail(user: string, content: string) {
+        const gmail = google.gmail({ version: "v1", auth: this.client });
+
+        const message = Buffer.from(
+            `To: ${user}\r\n` +
+            `From: ${user}\n` +
+            `Subject: Workschedule Link Update\r\n\r\n` +
+            content
+        ).toString('base64');
+
+        await gmail.users.messages.send({
+            userId: 'me', requestBody: {
+                raw: message
+            }
+        });
     }
 
     public async useCalandar(id: string) {

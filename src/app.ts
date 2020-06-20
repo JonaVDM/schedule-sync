@@ -11,6 +11,28 @@ const scoober = new Scoober();
 setInterval(main, 15 * 60 * 1000);
 main();
 
+interface Log {
+    added?: string[],
+    removed?: string[],
+    updated?: string[],
+    error?: string
+}
+
+const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+];
+
 function formatShift(shift: Shift): string {
     let description = '';
     Object.entries(shift).forEach(
@@ -26,10 +48,15 @@ function getShiftID(description: string): string {
         .split('_id=')[1];
 }
 
+function formatDate(start: Date, end: Date): string {
+    return `${start.getDate()} ${months[start.getMonth()]} ${start.getFullYear()} ${start.getHours()}:${start.getMinutes()} - ${end.getHours()}:${end.getMinutes()}`;
+}
+
 async function main() {
     dotenv.config();
 
     const { email, password } = process.env;
+    const log: Log = {};
 
     try {
         await google.login();
@@ -51,6 +78,8 @@ async function main() {
             const shift = shifts.find(shift => shift._id == id);
 
             if (!shift) {
+                if (!log.removed) log.removed = [];
+                log.removed.push(formatDate(new Date(event.start.dateTime), new Date(event.end.dateTime)));
                 await google.deleteEvent(event.id);
             }
         }
@@ -59,6 +88,8 @@ async function main() {
         for (const shift of shifts) {
             const event = events.find(event => getShiftID(event.description) == shift._id);
             if (!event) {
+                if (!log.added) log.added = [];
+                log.added.push(formatDate(new Date(shift.fromWithTimeZone), new Date(shift.toWithTimeZone)));
                 await google.addEvent(shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', formatShift(shift));
             } else {
                 // get the shift and event times
@@ -69,12 +100,45 @@ async function main() {
 
                 // check if the shift and event match up, otherwise update
                 if (start.getTime() != from.getTime() || end.getTime() != to.getTime()) {
+                    if (!log.updated) log.updated = [];
+                    log.added.push(`${formatDate(start, end)} - to - ${formatDate(from, to)}`);
                     await google.editEvent(event.id, shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', formatShift(shift));
                 }
             }
         }
     } catch (e) {
-        console.log(e);
+        log.error = e;
+    } finally {
+        if (log.error || log.added || log.removed || log.updated) {
+            let content = "";
+            const now = new Date();
+            content += `Generated on ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${now.getHours()}:${now.getMinutes()} \n\n\n`
+
+            if (log.error) {
+                content += "Error\n";
+                content += log.error;
+                content += "\n\n";
+            }
+
+            if (log.added) {
+                content += "Added\n";
+                content += log.added.join('\n');
+                content += "\n\n";
+            }
+
+            if (log.updated) {
+                content += "Updated\n";
+                content += log.updated.join('\n');
+                content += "\n\n";
+            }
+
+            if (log.removed) {
+                content += "Removed\n";
+                content += log.removed.join('\n');
+            }
+
+            google.sendEmail("jonajvdm@gmail.com", content);
+        }
     }
 }
 
