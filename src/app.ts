@@ -27,58 +27,40 @@ async function main() {
         const dates = getDates();
 
         await google.getCalendarId('Thuisbezorgd');
-        const events = await google.getEvents(dates);
-        const shifts = await scoober.shifts(...dates);
+        const events = [...await google.getEvents(dates)];
+        const shifts = [...await scoober.shifts(...dates)];
 
-        const shiftIdC: Map<string, string> = new Map();
-        const shiftIdS: string[] = [];
-
-        // get the ids from scoober
-        for (const shift of shifts) {
-            shiftIdS.push(shift._id);
-        }
-
-        // get the ids from google
+        // Shift removed
         for (const event of events) {
             if (!event.description) continue;
             const description: Shift = JSON.parse(event.description);
-            shiftIdC.set(description._id, event.id);
-        }
+            const id = description._id;
 
-        // remove event if shift does not exist
-        shiftIdC.forEach((value, key) => {
-            if (!shiftIdS.includes(key)) {
-                google.deleteEvent(value);
-                shiftIdC.delete(key);
+            const shift = shifts.find(shift => shift._id == id);
+
+            if (!shift) {
+                google.deleteEvent(event.id);
             }
-        });
-
-        // add shift
-        for (const shift of shifts) {
-            if (shiftIdC.get(shift._id)) continue;
-            google.addEvent(shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', JSON.stringify(shift));
         }
 
-        // Update shift
-        shiftIdC.forEach((value, key) => {
-            for (const shift of shifts) {
-                if (shift._id == key) {
-                    for (const event of events) {
-                        if (event.id == value) {
-                            const start = new Date(event.start.dateTime);
-                            const from = new Date(shift.fromWithTimeZone);
+        // Shift added or updated
+        for (const shift of shifts) {
+            const event = events.find(event => (<Shift>JSON.parse(event.description))._id == shift._id);
+            if (!event) {
+                google.addEvent(shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', JSON.stringify(shift));
+            } else {
+                // get the shift and event times
+                const start = new Date(event.start.dateTime);
+                const from = new Date(shift.fromWithTimeZone);
+                const end = new Date(event.end.dateTime);
+                const to = new Date(shift.toWithTimeZone);
 
-                            const end = new Date(event.end.dateTime);
-                            const to = new Date(shift.toWithTimeZone);
-
-                            if (start.getTime() != from.getTime() || end.getTime() != to.getTime()) {
-                                google.editEvent(value, shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', JSON.stringify(shift));
-                            }
-                        }
-                    }
+                // check if the shift and event match up, otherwise update
+                if (start.getTime() != from.getTime() || end.getTime() != to.getTime()) {
+                    google.editEvent(event.id, shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', JSON.stringify(shift));
                 }
             }
-        });
+        }
     } catch (e) {
         console.log(e);
         exit(1);
