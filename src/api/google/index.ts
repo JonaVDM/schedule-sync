@@ -10,13 +10,13 @@ export default class Google {
         this.client = client;
     }
 
-    public async sendEmail(user: string, content: string) {
+    public async sendEmail(from: string, to: string, subject: string, content: string) {
         const gmail = google.gmail({ version: "v1", auth: this.client });
 
         const message = Buffer.from(
-            `To: ${user}\r\n` +
-            `From: ${user}\n` +
-            `Subject: Workschedule Link Update\r\n\r\n` +
+            `To: ${to}\r\n` +
+            `From: ${from}\n` +
+            `Subject: ${subject}\r\n\r\n` +
             content
         ).toString('base64');
 

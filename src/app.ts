@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 
 import Shift from './types/shift';
 
+dotenv.config();
+
 const google = new Google();
 const scoober = new Scoober();
 
@@ -53,8 +55,6 @@ function formatDate(start: Date, end: Date): string {
 }
 
 async function main() {
-    dotenv.config();
-
     const { email, password } = process.env;
     const log: Log = {};
 
@@ -137,7 +137,7 @@ async function main() {
                 content += log.removed.join('\n');
             }
 
-            google.sendEmail("jonajvdm@gmail.com", content);
+            google.sendEmail(`Jona <${process.env.email}>`, process.env.email, 'Work Schedule Link Update', content);
         }
     }
 }
