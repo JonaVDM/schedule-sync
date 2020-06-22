@@ -153,7 +153,11 @@ function getDates(): [Date, Date] {
     const toSunday = ((7 - dayOfWeek) + 7) * day;
 
     const monday = new Date(today.getTime() - toMonday);
+    monday.setMinutes(0);
+    monday.setHours(6);
     const sunday = new Date(today.getTime() + toSunday);
+    sunday.setMinutes(59);
+    sunday.setHours(23);
 
     return [monday, sunday];
 }

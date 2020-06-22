@@ -4,7 +4,6 @@
   "description": "This is a little something to automatically add my work schedule in my google agenda.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .ts,.tsx",
     "start": "node dist/app.js",
     "build": "tsc",
