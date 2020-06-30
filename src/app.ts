@@ -101,7 +101,7 @@ async function main() {
                 // check if the shift and event match up, otherwise update
                 if (start.getTime() != from.getTime() || end.getTime() != to.getTime()) {
                     if (!log.updated) log.updated = [];
-                    log.added.push(`${formatDate(start, end)} - to - ${formatDate(from, to)}`);
+                    log.updated.push(`${formatDate(start, end)} - to - ${formatDate(from, to)}`);
                     await google.editEvent(event.id, shift.fromWithTimeZone, shift.toWithTimeZone, 'Work Thuisbezorgd', formatShift(shift));
                 }
             }
