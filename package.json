@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx",
     "start": "node dist/app.js",
+    "auth": "node dist/auth.js",
     "build": "tsc",
     "watch": "nodemon"
   },
